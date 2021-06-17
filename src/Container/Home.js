@@ -53,11 +53,15 @@ class Home extends Component {
     }
 
     expand(index){
-        for(let i = 0; i < this.state.data.length; i++){
-            this.state.data[i].isExpanded = false
+        if(this.state.data[index].isExpanded){
+            this.state.data[index].isExpanded = !this.state.data[index].isExpanded
+        } else{
+            for(let i = 0; i < this.state.data.length; i++){
+                this.state.data[i].isExpanded = false
+            }
+            this.state.data[index].isExpanded = true
         }
-        this.state.data[index].isExpanded = !this.state.data[index].isExpanded
-        this.setState({isExpanded: !this.state.isExpanded})
+        this.setState({updated: !this.state.updated})
     }
   
     render() {
