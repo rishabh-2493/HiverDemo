@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { CommonActions } from "@react-navigation/native";
 import { callApi } from '../ApiClient/ApiClient'
+import {connect} from 'react-redux'
+import { clickAction, storeData } from '../Redux/RepositoryActions';
+import RenderItemComponent from '../../src/Component/GitRepoComponent'
 
 class Home extends Component {
     constructor(props) {
@@ -18,8 +21,9 @@ class Home extends Component {
         this.state = {
             loading: false,
             error: false,
-            respData:[],
-            updated:false
+            data:[],
+            updated:false,
+            index:0
         }
     }
 
@@ -30,13 +34,11 @@ class Home extends Component {
     async getData(){
         this.setState({loading : true})
         var res = await callApi();
-        console.log(res)
         if(res){
             for(let obj in res.item){
                 obj["isExpanded"] = false
             }
             this.setState({data: res.items})
-            
         } else{
 
         this.setState({error : true})
@@ -52,16 +54,16 @@ class Home extends Component {
         this.getData()
     }
 
-    expand(index){
-        if(this.state.data[index].isExpanded){
-            this.state.data[index].isExpanded = !this.state.data[index].isExpanded
-        } else{
-            for(let i = 0; i < this.state.data.length; i++){
-                this.state.data[i].isExpanded = false
+    expand = (index) => {
+        if(this.props.isExpanded){
+            if(this.props.activeIndex === index){
+                this.props.expandCollapse({isExpanded:false, index:index})
+            } else{
+                this.props.expandCollapse({isExpanded:true, index:index})
             }
-            this.state.data[index].isExpanded = true
+        } else{
+            this.props.expandCollapse({isExpanded:true, index:index})
         }
-        this.setState({updated: !this.state.updated})
     }
   
     render() {
@@ -108,37 +110,12 @@ class Home extends Component {
                             style={{flexGrow:0}}
                             renderItem={({ item: rowData, index: index }) => {  
                                 return(
-                                    <View style={{backgroundColor:"#ffffff"}}>
-                                        <TouchableOpacity style={{padding:10, flexDirection:'row'}} onPress={() => this.expand(index)}>
-                                            <Image style={{height:60, width:60, borderRadius:30 }} source={{uri: rowData.owner.avatar_url}} resizeMode={'cover'}></Image>
-                                            <View style={{justifyContent:'center', marginStart:20, flex:1}}>
-                                                <Text style={{color:'#929292', fontSize:12}}>{rowData.full_name}</Text>
-                                                <Text style={{color:'#4a4a4a', fontWeight:'bold', fontSize:15, marginTop:5}} numberOfLines={1}>{rowData.description}</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                        {
-                                            rowData.isExpanded
-                                            ?
-                                                <View style={{marginBottom:20}}>
-                                                    <View style={{justifyContent:'center', marginStart:90, flex:1}}>
-                                                        <Text style={{color:'#929292', fontSize:12}}>{rowData.html_url}</Text>
-                                                        <View style={{flexDirection:'row', marginTop:10, marginEnd:10, alignItems:'center'}}>
-                                                            <View style={{backgroundColor:'red', width:10, height:10, borderRadius:5}}></View>
-                                                            <Text style={{marginStart:5, color:"#929292"}}>{rowData.language?rowData.language:"N/A"}</Text>
-
-                                                            <Image style={{width:15, height:15, marginStart:15}} source={require('../../assets/stars.png')} resizeMode={'stretch'}></Image>
-                                                            <Text style={{marginStart:5, color:"#929292"}}>{rowData.watchers}</Text>
-
-                                                            <Image style={{width:15, height:15, marginStart:15}} source={require('../../assets/forks.png')}></Image>
-                                                            <Text style={{marginStart:5, color:"#929292"}}>{rowData.forks}</Text>
-                                                        </View>
-                                                    </View>
-                                                </View>
-                                            :
-                                                null
-                                        }
-                                        <View style={{backgroundColor:"#e8e8e8", height:1}}></View>
-                                    </View>
+                                    <RenderItemComponent 
+                                        data={rowData}
+                                        index={index}
+                                        isExpanded={this.props.isExpanded}
+                                        activeIndex={this.props.activeIndex}
+                                        onClick={this.expand}/>
                                 );
                             }}
                             horizontal={false}
@@ -151,4 +128,17 @@ class Home extends Component {
     }
 }
 
-export default Home;
+const mapStateToProps=(state)=>{
+    return{
+        isExpanded:state.isExpanded,
+        activeIndex:state.index
+    }
+}
+  
+const mapDispatchToProps=(dispatch)=>{
+    return{
+        expandCollapse:(parameter)=>{dispatch(clickAction(parameter))}
+    }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(Home);

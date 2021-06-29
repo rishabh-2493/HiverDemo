@@ -10,12 +10,16 @@
  import { NavigationContainer } from '@react-navigation/native';
  import HomeStack from "./src/Routes/Routes"
  import { Platform } from 'react-native';
- 
+ import {Provider} from 'react-redux';
+import Store from './src/Redux/Store';
+
  const App = function () {
   return (
-    <NavigationContainer>
-      <HomeStack/>
-    </NavigationContainer>
+    <Provider store={Store}>
+      <NavigationContainer>
+        <HomeStack/>
+      </NavigationContainer>
+    </Provider>
   )
 }
 
